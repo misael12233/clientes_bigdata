@@ -26,7 +26,10 @@ try:
             fecha_registro DATE NOT NULL,
             estado_cliente VARCHAR(50) NOT NULL,
             puntuacion FLOAT NOT NULL,
-            telefono VARCHAR(15) NOT NULL
+            telefono VARCHAR(15) NOT NULL,
+            nombre_completo VARCHAR(200) NOT NULL,
+            longitud_nombre INT NOT NULL,
+            año_registro INT NOT NULL
         )
         """))
     print("✅ Tabla creada")

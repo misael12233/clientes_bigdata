@@ -1,33 +1,44 @@
 from conexion import conectar
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
-# ==========================================================
-# ARCHIVO: guardar_database.py
+# Leer CSV correctamente (🔥 AQUÍ ESTÁ LA CORRECCIÓN)
+df = pd.read_csv("clientes_bigdata_1000.csv", encoding="latin-1", sep=";", dtype={"telefono": str})
 
-#leemos el csv con pandas
-df = pd.read_csv("clientes_bigdata_1000.csv", encoding="latin-1", sep=";")
-print("✅ CSV cargado (datos originales)")
-print(df.head(5))
+print("✅ CSV cargado")
+print(df.head(50))
 
-# Creamos una conexión a la base de datos usando SQLAlchemy
+# Conexión
 engine = create_engine("mysql+mysqlconnector://root:@127.0.0.1:3308/clientes_bigdata")
-print("✅ Conexión creada")
 
-# Guardamos el DataFrame en la tabla "clientes" de MySQL
 try:
-    df["fecha_registro"] = pd.to_datetime(
-    df["fecha_registro"],
-    format="%d/%m/%Y",
-    errors="coerce"
-    )
-    df.to_sql(
-        name="clientes", 
-        con=engine, 
-        if_exists="append", 
-        index=False)
-    print("✅ Datos guardados en MySQL correctamente")
+    # Crear tabla
+    with engine.connect() as conn:
+        conn.execute(text("""
+        CREATE TABLE IF NOT EXISTS clientes (
+            id_cliente INT PRIMARY KEY,
+            nombre VARCHAR(100),
+            apellido VARCHAR(100),
+            ciudad VARCHAR(100),
+            correo VARCHAR(150),
+            edad INT,
+            salario FLOAT,
+            fecha_registro DATE,
+            estado_cliente VARCHAR(50),
+            puntuacion FLOAT,
+            telefono VARCHAR(15)
+        )
+        """))
+    print("✅ Tabla creada")
+
+    # Convertir fecha
+    df["fecha_registro"] = pd.to_datetime(df["fecha_registro"], dayfirst=True, errors="coerce")
+
+    # Insertar datos
+    df.to_sql("clientes", con=engine, if_exists="append", index=False)
+
+    print("✅ Datos insertados correctamente")
+
 except Exception as e:
-    print(f"❌ Error al guardar datos en MySQL: {e}")   
-
-
+    print("❌ Error:")
+    print(e)
